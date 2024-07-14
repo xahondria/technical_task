@@ -84,44 +84,72 @@ const StyledLoadButton = styled.button`
   text-align: center;
   vertical-align: center;
 
+  cursor: pointer;
+
   &:focus {
     outline: none;
+
+    &:not(:disabled) {
+      background-color: rgba(255, 255, 255, .1);
+    }
+  }
+
+  &:hover:not(:disabled) {
     background-color: rgba(255, 255, 255, .1);
   }
 
-  &:hover {
-    background-color: rgba(255, 255, 255, .1);
-  }
-
-  &:active {
+  &:active:not(:disabled) {
     background-color: rgba(255, 255, 255, .2);
   }
+
+  &:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+  }
 `;
+
+let currentPage = 0;
+const loadedPages: Collection<Comment>[] = [];
 
 function Comments() {
 
   const authorsList: UseQueryResult<Author[], unknown> = useGetAuthors();
-  const commentsCollection: UseQueryResult<Collection<Comment>, unknown> = useGetComments(1);
+  const commentsCollection: UseQueryResult<Collection<Comment>, unknown> = useGetComments(currentPage + 1);
 
   if (authorsList.isLoading || commentsCollection.isLoading) {
     return <div>Loading...</div>;
   }
 
   if (authorsList.error) {
+    // TODO для такой обработки нужен notification service, или что-то подобное
     return <div>Error: { String(authorsList.error) }</div>;
   }
 
   if (commentsCollection.error) {
-    return <div>Error: { String(commentsCollection.error) }</div>;
+    console.error(commentsCollection.error);
+    return (
+      <StyledLayout>
+        <div>Error: { String(commentsCollection.error) }</div>
+        <StyledLoadButtonContainer className="container">
+          <StyledLoadButton type="button"
+                            onClick={ onLoadMoreClick }>Загрузить ещё</StyledLoadButton>
+        </StyledLoadButtonContainer>
+      </StyledLayout>
+    );
   }
 
-  // TODO: commentsCollection.data?.data.length не является числом всех комментариев, поскольку мы не запрашиваем сразу все страницы.
-  //  Нужно соответствующее апи.
-  const postsTotal = commentsCollection.data?.data.length || 0;
-  // TODO: аналогично, нужно соответствующее апи для суммы всех лайков.
-  const likesTotal = commentsCollection.data?.data.reduce((acc, comment) => acc + comment.likes, 0);
+  currentPage = commentsCollection.data?.pagination.page || 0;
 
-  const comments: Array<Comment> = (commentsCollection.data?.data || [])
+  const isLastPage = commentsCollection.data?.pagination.page === commentsCollection.data?.pagination.total_pages;
+
+  if (commentsCollection.data && !loadedPages.find(page => page.pagination.page === commentsCollection.data.pagination.page)) {
+    loadedPages.push(commentsCollection.data);
+  }
+
+  const postsTotal = getPostsTotal(loadedPages);
+  const likesTotal = getLikesTotal(loadedPages);
+
+  const comments: Array<Comment> = (loadedPages.flatMap(page => page.data))
     .sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
 
   const postsList = comments.map((comment) => {
@@ -134,6 +162,11 @@ function Comments() {
                        comment={ comment.text }
                        likes={ comment.likes } />;
   });
+
+  function onLoadMoreClick(): void {
+    commentsCollection.refetch()
+      .catch((error) => console.error('Error:', error));
+  }
 
   return (
     <StyledLayout>
@@ -151,10 +184,24 @@ function Comments() {
         { postsList }
       </section>
       <StyledLoadButtonContainer className="container">
-        <StyledLoadButton>Загрузить ещё</StyledLoadButton>
+        {/*TODO commentsCollection.isLoading не обновляется при refetch*/ }
+        <StyledLoadButton type="button"
+                          disabled={ commentsCollection.isLoading || isLastPage }
+                          onClick={ onLoadMoreClick }>Загрузить ещё</StyledLoadButton>
       </StyledLoadButtonContainer>
     </StyledLayout>
   );
+}
+
+function getPostsTotal(loadedPages: Collection<Comment>[]): number {
+  // TODO: commentsCollection.data?.data.length не является числом всех комментариев, поскольку мы не запрашиваем сразу все страницы.
+  //  Нужно соответствующее апи.
+  return loadedPages.reduce((acc, page) => acc + page.data.length, 0);
+}
+
+function getLikesTotal(loadedPages: Collection<Comment>[]): number {
+  // TODO: аналогично, нужно соответствующее апи для суммы всех лайков.
+  return loadedPages.reduce((acc, page) => acc + page.data.reduce((acc, comment) => acc + comment.likes, 0), 0);
 }
 
 export default Comments;
