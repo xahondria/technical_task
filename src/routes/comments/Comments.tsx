@@ -2,64 +2,70 @@ import styled from 'styled-components';
 import {formatNumber} from '../../common/utils/format-number';
 import IconHeartGrey from '../../common/icons/icon-heart-grey';
 import Post from './Post';
+import {useGetAuthors} from '../../repositories/authors/authors.repository';
+import {UseQueryResult} from 'react-query/types/react/types';
+import {Author} from '../../repositories/authors/models/author.model';
+import {useGetComments} from '../../repositories/comments/comments.repository';
+import {Comment} from '../../repositories/comments/models/comment.model';
+import {Collection} from '../../common/models/collection.model';
 
 const StyledLayout = styled.div`
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
 
-    padding-top: 32px;
-    padding-bottom: 76px;
+  padding-top: 32px;
+  padding-bottom: 76px;
 
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-start;
-    flex-direction: column;
-    flex-wrap: nowrap;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex-direction: column;
+  flex-wrap: nowrap;
 
-    overflow-y: auto;
+  overflow-y: auto;
 
-    background-color: rgba(16, 31, 37, .3);
+  background-color: rgba(16, 31, 37, .3);
 
-    @media screen and (min-width: 562px) {
-      padding-top: 52px;
-      padding-bottom: 64px;
-    }
-  `;
+  @media screen and (min-width: 562px) {
+    padding-top: 52px;
+    padding-bottom: 64px;
+  }
+`;
 
 const StyledHeader = styled.header`
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: nowrap;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: nowrap;
 
-    font-weight: 500;
-  `;
+  font-weight: bold;
+`;
 
 const StyledLikes = styled.span`
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    flex-wrap: nowrap;
-  `;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: nowrap;
+`;
 
 const StyledHr = styled.hr`
-    width: 100%;
-    border: .2px solid #767676;
-  `;
+  width: 100%;
+  border: .2px solid #767676;
+`;
 
 const StyledPost = styled(Post)`
-    margin-top: 32px;
-  `;
+  margin-top: 32px;
+`;
 
 const StyledLoadButtonContainer = styled.section`
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: nowrap;
-    margin-top: 60px;
-  `;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  margin-top: 60px;
+`;
 
 const StyledLoadButton = styled.button`
   height: 36px;
@@ -94,22 +100,55 @@ const StyledLoadButton = styled.button`
 
 function Comments() {
 
+  const authorsList: UseQueryResult<Author[], unknown> = useGetAuthors();
+  const commentsCollection: UseQueryResult<Collection<Comment>, unknown> = useGetComments(1);
+
+  if (authorsList.isLoading || commentsCollection.isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (authorsList.error) {
+    return <div>Error: { String(authorsList.error) }</div>;
+  }
+
+  if (commentsCollection.error) {
+    return <div>Error: { String(commentsCollection.error) }</div>;
+  }
+
+  // TODO: commentsCollection.data?.data.length не является числом всех комментариев, поскольку мы не запрашиваем сразу все страницы.
+  //  Нужно соответствующее апи.
+  const postsTotal = commentsCollection.data?.data.length || 0;
+  // TODO: аналогично, нужно соответствующее апи для суммы всех лайков.
+  const likesTotal = commentsCollection.data?.data.reduce((acc, comment) => acc + comment.likes, 0);
+
+  const comments: Array<Comment> = (commentsCollection.data?.data || [])
+    .sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
+
+  const postsList = comments.map((comment) => {
+
+    const author = authorsList.data?.find((author) => author.id === comment.author);
+
+    return <StyledPost key={ comment.id }
+                       date={ comment.created }
+                       author={ author }
+                       comment={ comment.text }
+                       likes={ comment.likes } />;
+  });
+
   return (
     <StyledLayout>
       <section className="container">
         <StyledHeader>
-          <span>{ formatNumber(2672) } комментариев</span>
+          <span>{ formatNumber(postsTotal) } комментариев</span>
           <StyledLikes>
             <IconHeartGrey />
-            <span style={ {marginLeft: 8} }>{ formatNumber(8631231235) }</span>
+            <span style={ {marginLeft: 8} }>{ formatNumber(likesTotal) }</span>
           </StyledLikes>
         </StyledHeader>
         <StyledHr></StyledHr>
       </section>
       <section className="container">
-        <StyledPost />
-        <StyledPost />
-        <StyledPost />
+        { postsList }
       </section>
       <StyledLoadButtonContainer className="container">
         <StyledLoadButton>Загрузить ещё</StyledLoadButton>

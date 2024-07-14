@@ -4,6 +4,10 @@ import IconHeartRed from '../../common/icons/icon-heart-red';
 import {useState} from 'react';
 import IconHeartRedFilled from '../../common/icons/icon-heart-red-filled';
 
+interface LikesProps {
+  likesNumber: number;
+}
+
 const StyledLikesButton = styled.button`
   display: flex;
   justify-content: flex-end;
@@ -20,7 +24,7 @@ const StyledLikesButton = styled.button`
   color: inherit;
   font-family: inherit;
   font-size: 15px;
-  font-weight: 500;
+  font-weight: bold;
   line-height: 1.5;
 
   &:focus {
@@ -37,19 +41,28 @@ const StyledLikesButton = styled.button`
   }
 `;
 
-function Likes() {
+function Likes({
+                 likesNumber,
+               }: LikesProps) {
 
   const [ selected, setSelected ] = useState<boolean>(false);
+  const [ likes, setLikes ] = useState<number>(likesNumber);
 
   function handleClick(): void {
     setSelected(!selected);
+    // TODO нужно апи для обновления количества лайков
+    if (selected) {
+      setLikes(likes - 1);
+    } else {
+      setLikes(likes + 1);
+    }
   }
 
   return (
     <StyledLikesButton type="button"
                        onClick={ handleClick }>
       { selected ? <IconHeartRedFilled /> : <IconHeartRed /> }
-      <span style={ {marginLeft: 8} }>{ formatNumber(1350) }</span>
+      <span style={ {marginLeft: 8} }>{ formatNumber(likes) }</span>
     </StyledLikesButton>
   );
 }

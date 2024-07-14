@@ -1,55 +1,65 @@
-import styled from "styled-components";
-import Likes from "./Likes";
+import styled from 'styled-components';
+import Likes from './Likes';
+import {Author} from '../../repositories/authors/models/author.model';
+
+interface PostProps {
+  className?: string;
+  date?: string;
+  author?: Author;
+  comment?: string;
+  likes?: number;
+}
 
 const StyledLayout = styled.div`
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-start;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
 
-    gap: 20px;
-  `;
+  gap: 20px;
+`;
 
 const StyledAvatar = styled.img`
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: #000;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #000;
+  object-fit: cover;
 
-    flex-shrink: 0;
-    flex-grow: 0;
+  flex-shrink: 0;
+  flex-grow: 0;
 
-    @media screen and (min-width: 562px) {
-      width: 68px;
-      height: 68px;
-    }
-  `;
+  @media screen and (min-width: 562px) {
+    width: 68px;
+    height: 68px;
+  }
+`;
 
 const StyledContent = styled.div`
-    flex-grow: 1;
-  `;
+  flex-grow: 1;
+`;
 
 const StyledHeader = styled.header`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: nowrap;
-    height: 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: nowrap;
+  height: 40px;
 
-    @media screen and (min-width: 562px) {
-      height: 68px;
-    }
-  `;
+  @media screen and (min-width: 562px) {
+    height: 68px;
+  }
+`;
 
 const StyledUsername = styled.div`
-    font-weight: 500;
-    font-size: 16px;
-    line-height: 22px;
-  `;
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 22px;
+`;
 
 const StyledDate = styled.div`
-    font-size: 16px;
-    color: #8297AB;
-  `;
+  font-size: 16px;
+  color: #8297AB;
+`;
 
 const StyledComment = styled.div`
 
@@ -60,23 +70,45 @@ const StyledComment = styled.div`
   }
 `;
 
-function Post({className}: {className?: string}) {
+function getCommentDate(isoDate: string | undefined): string {
+
+  if (!isoDate) {
+    return '';
+  }
+
+  const commentDate = new Date(isoDate);
+
+  return commentDate.toLocaleDateString('ru-RU', {
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+  });
+}
+
+function Post({
+                className,
+                date,
+                author,
+                comment,
+                likes,
+              }: PostProps) {
 
   return (
     <StyledLayout className={ className }>
-      <StyledAvatar src="https://via.placeholder.com/32"
+      <StyledAvatar src={ author?.avatar }
                     alt="avatar" />
       <StyledContent>
         <StyledHeader>
           <div>
-            <StyledUsername>username</StyledUsername>
-            <StyledDate>1 час назад</StyledDate>
+            <StyledUsername>{ author?.name }</StyledUsername>
+            <StyledDate>{ getCommentDate(date) }</StyledDate>
           </div>
-          <Likes />
+          <Likes likesNumber={ likes ?? 0 } />
         </StyledHeader>
-        <StyledComment>
-          В Календаре появятся более десятка квестов – охота на зомби, битвы с боссами, ритуалы и разное другое. В том числе, там будет целая категория событий, за выполнение.
-        </StyledComment>
+        <StyledComment>{ comment }</StyledComment>
       </StyledContent>
     </StyledLayout>
   );
