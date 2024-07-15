@@ -89,6 +89,20 @@ function getCommentDate(isoDate: string | undefined): string {
 
   const commentDate = new Date(isoDate);
 
+  const hoursPassed = Math.floor((new Date().getTime() - commentDate.getTime()) / 1000 / 60 / 60);
+
+  if (hoursPassed <= 1) {
+    return '1 час назад';
+  }
+
+  if (hoursPassed > 1 && hoursPassed <= 2) {
+    return `2 часа назад`;
+  }
+
+  if (hoursPassed > 2 && hoursPassed <= 3) {
+    return `3 часа назад`;
+  }
+
   return commentDate.toLocaleDateString('ru-RU', {
     year: 'numeric',
     month: 'numeric',
