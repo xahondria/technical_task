@@ -114,6 +114,7 @@ const StyledLoadButton = styled.button`
 `;
 
 let currentPage = 0;
+let total_pages = 0;
 const loadedPages: Collection<Comment>[] = [];
 
 function Comments() {
@@ -131,7 +132,12 @@ function Comments() {
   }
 
   const authorsList: UseQueryResult<Author[], unknown> = useGetAuthors();
-  const commentsCollection: UseQueryResult<Collection<Comment>, unknown> = useGetComments(currentPage + 1);
+
+  /**
+   * Хак, чтобы избежать проблемы, вероятно, с change detection.
+   */
+  const pageToRequest = total_pages > 0 && currentPage >= total_pages ? total_pages : currentPage + 1;
+  const commentsCollection: UseQueryResult<Collection<Comment>, unknown> = useGetComments(pageToRequest);
 
   if (authorsList.isLoading || commentsCollection.isLoading) {
     return <div>Loading...</div>;
