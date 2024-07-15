@@ -119,6 +119,7 @@ const loadedPages: Collection<Comment>[] = [];
 function Comments() {
 
   const [ userLikes, setUserLikes ] = useState<number>(0);
+  const [ refetchInProgress, setRefetchInProgress ] = useState<boolean>(false);
 
   function onLikeSelectionChange(selected: boolean): void {
     if (selected) {
@@ -181,7 +182,9 @@ function Comments() {
   });
 
   function onLoadMoreClick(): void {
+    setRefetchInProgress(true);
     commentsCollection.refetch()
+      .finally(() => setRefetchInProgress(false))
       .catch((error) => console.error('Error:', error));
   }
 
@@ -203,7 +206,7 @@ function Comments() {
       <StyledLoadButtonContainer className="container">
         {/*TODO commentsCollection.isLoading не обновляется при refetch*/ }
         <StyledLoadButton type="button"
-                          disabled={ commentsCollection.isLoading || isLastPage }
+                          disabled={ commentsCollection.isLoading || refetchInProgress || isLastPage }
                           onClick={ onLoadMoreClick }>Загрузить ещё</StyledLoadButton>
       </StyledLoadButtonContainer>
     </StyledLayout>
