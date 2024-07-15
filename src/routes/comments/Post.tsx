@@ -1,13 +1,13 @@
 import styled from 'styled-components';
 import Likes from './Likes';
+import {Comment} from '../../repositories/comments/models/comment.model';
 import {Author} from '../../repositories/authors/models/author.model';
 
 interface PostProps {
   className?: string;
-  date?: string;
-  author?: Author;
-  comment?: string;
-  likes?: number;
+  comment: Comment;
+  allComments: Comment[];
+  authors: Author[];
 }
 
 const StyledLayout = styled.div`
@@ -70,6 +70,17 @@ const StyledComment = styled.div`
   }
 `;
 
+const StyledChildCommentsContainer = styled.div`
+  margin-top: 24px;
+  margin-left: 20px;
+
+  @media screen and (min-width: 562px) {
+    margin-top: 32px;
+    margin-left: 34px;
+
+  }
+`;
+
 function getCommentDate(isoDate: string | undefined): string {
 
   if (!isoDate) {
@@ -90,27 +101,39 @@ function getCommentDate(isoDate: string | undefined): string {
 
 function Post({
                 className,
-                date,
-                author,
                 comment,
-                likes,
+                allComments,
+                authors,
               }: PostProps) {
 
+  const author = authors.find((author) => author.id === comment.author);
+
+  const childComments = allComments
+    .filter((c) => c.parent === comment.id)
+    .map((c) => Post({comment: c, allComments, authors}));
+
+  console.log(childComments);
+
   return (
-    <StyledLayout className={ className }>
-      <StyledAvatar src={ author?.avatar }
-                    alt="avatar" />
-      <StyledContent>
-        <StyledHeader>
-          <div>
-            <StyledUsername>{ author?.name }</StyledUsername>
-            <StyledDate>{ getCommentDate(date) }</StyledDate>
-          </div>
-          <Likes likesNumber={ likes ?? 0 } />
-        </StyledHeader>
-        <StyledComment>{ comment }</StyledComment>
-      </StyledContent>
-    </StyledLayout>
+    <div>
+      <StyledLayout className={ className }>
+        <StyledAvatar src={ author?.avatar }
+                      alt="avatar" />
+        <StyledContent>
+          <StyledHeader>
+            <div>
+              <StyledUsername>{ author?.name }</StyledUsername>
+              <StyledDate>{ getCommentDate(comment.created) }</StyledDate>
+            </div>
+            <Likes likesNumber={ comment.likes ?? 0 } />
+          </StyledHeader>
+          <StyledComment>{ comment.text }</StyledComment>
+        </StyledContent>
+      </StyledLayout>
+      <StyledChildCommentsContainer>
+        { childComments }
+      </StyledChildCommentsContainer>
+    </div>
   );
 }
 

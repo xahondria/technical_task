@@ -56,7 +56,11 @@ const StyledHr = styled.hr`
 `;
 
 const StyledPost = styled(Post)`
-  margin-top: 32px;
+  margin-top: 24px;
+
+  @media screen and (min-width: 562px) {
+    margin-top: 32px;
+  }
 `;
 
 const StyledLoadButtonContainer = styled.section`
@@ -149,18 +153,18 @@ function Comments() {
   const postsTotal = getPostsTotal(loadedPages);
   const likesTotal = getLikesTotal(loadedPages);
 
-  const comments: Array<Comment> = (loadedPages.flatMap(page => page.data))
-    .sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
+  const allComments: Array<Comment> = (loadedPages.flatMap(page => page.data));
+  // TODO я бы сортировал по дате
+  // .sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
 
-  const postsList = comments.map((comment) => {
+  const topLevelComments = allComments.filter((comment) => !comment.parent);
 
-    const author = authorsList.data?.find((author) => author.id === comment.author);
+  const postsList = topLevelComments.map((comment) => {
 
     return <StyledPost key={ comment.id }
-                       date={ comment.created }
-                       author={ author }
-                       comment={ comment.text }
-                       likes={ comment.likes } />;
+                       comment={ comment }
+                       allComments={ allComments }
+                       authors={ authorsList?.data ?? [] } />;
   });
 
   function onLoadMoreClick(): void {
