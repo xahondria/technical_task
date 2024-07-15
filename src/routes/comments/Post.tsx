@@ -44,7 +44,6 @@ const StyledHeader = styled.header`
   justify-content: space-between;
   align-items: center;
   flex-wrap: nowrap;
-  height: 40px;
 
   @media screen and (min-width: 562px) {
     height: 68px;
