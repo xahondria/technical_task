@@ -115,7 +115,7 @@ const StyledLoadButton = styled.button`
 
 let currentPage = 0;
 let total_pages = 0;
-const loadedPages: Collection<Comment>[] = [];
+let loadedPages: Collection<Comment>[] = [];
 
 function Comments() {
 
@@ -163,6 +163,7 @@ function Comments() {
   }
 
   currentPage = commentsCollection.data?.pagination.page || 0;
+  total_pages = commentsCollection.data?.pagination.total_pages || 0;
 
   const isLastPage = commentsCollection.data?.pagination.page === commentsCollection.data?.pagination.total_pages;
 
@@ -191,6 +192,7 @@ function Comments() {
   function onReloadClick(): void {
     setRefetchInProgress(true);
     currentPage = 0;
+    loadedPages = [];
     commentsCollection.refetch()
       .finally(() => setRefetchInProgress(false))
       .catch((error) => console.error('Error:', error));
