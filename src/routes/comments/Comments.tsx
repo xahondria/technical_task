@@ -8,6 +8,7 @@ import {Author} from '../../repositories/authors/models/author.model';
 import {useGetComments} from '../../repositories/comments/comments.repository';
 import {Comment} from '../../repositories/comments/models/comment.model';
 import {Collection} from '../../common/models/collection.model';
+import {useState} from 'react';
 
 const StyledLayout = styled.div`
   position: fixed;
@@ -117,6 +118,17 @@ const loadedPages: Collection<Comment>[] = [];
 
 function Comments() {
 
+  const [ userLikes, setUserLikes ] = useState<number>(0);
+
+  function onLikeSelectionChange(selected: boolean): void {
+    if (selected) {
+      // TODO апи?
+      setUserLikes(userLikes - 1);
+    } else {
+      setUserLikes(userLikes + 1);
+    }
+  }
+
   const authorsList: UseQueryResult<Author[], unknown> = useGetAuthors();
   const commentsCollection: UseQueryResult<Collection<Comment>, unknown> = useGetComments(currentPage + 1);
 
@@ -151,7 +163,7 @@ function Comments() {
   }
 
   const postsTotal = getPostsTotal(loadedPages);
-  const likesTotal = getLikesTotal(loadedPages);
+  const likesTotal = getLikesTotal(loadedPages) + userLikes;
 
   const allComments: Array<Comment> = (loadedPages.flatMap(page => page.data));
   // TODO я бы сортировал по дате
@@ -164,7 +176,8 @@ function Comments() {
     return <StyledPost key={ comment.id }
                        comment={ comment }
                        allComments={ allComments }
-                       authors={ authorsList?.data ?? [] } />;
+                       authors={ authorsList?.data ?? [] }
+                       onLikeSelectionChange={ onLikeSelectionChange } />;
   });
 
   function onLoadMoreClick(): void {

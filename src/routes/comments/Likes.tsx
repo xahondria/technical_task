@@ -6,6 +6,7 @@ import IconHeartRedFilled from '../../common/icons/icon-heart-red-filled';
 
 interface LikesProps {
   likesNumber: number;
+  onLikeSelectionChange: (selected: boolean) => void;
 }
 
 const StyledLikesButton = styled.button`
@@ -27,6 +28,8 @@ const StyledLikesButton = styled.button`
   font-weight: bold;
   line-height: 1.5;
 
+  cursor: pointer;
+
   &:focus {
     outline: none;
     background-color: rgba(255, 255, 255, .1);
@@ -43,6 +46,7 @@ const StyledLikesButton = styled.button`
 
 function Likes({
                  likesNumber,
+                 onLikeSelectionChange,
                }: LikesProps) {
 
   const [ selected, setSelected ] = useState<boolean>(false);
@@ -56,6 +60,7 @@ function Likes({
     } else {
       setLikes(likes + 1);
     }
+    onLikeSelectionChange(selected);
   }
 
   return (

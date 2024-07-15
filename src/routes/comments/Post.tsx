@@ -8,6 +8,7 @@ interface PostProps {
   comment: Comment;
   allComments: Comment[];
   authors: Author[];
+  onLikeSelectionChange: (selected: boolean) => void;
 }
 
 const StyledLayout = styled.div`
@@ -104,15 +105,20 @@ function Post({
                 comment,
                 allComments,
                 authors,
+                onLikeSelectionChange,
               }: PostProps) {
 
   const author = authors.find((author) => author.id === comment.author);
 
   const childComments = allComments
     .filter((c) => c.parent === comment.id)
-    .map((c) => Post({comment: c, allComments, authors}));
-
-  console.log(childComments);
+    .map((c) => <Post
+      key={ c.id }
+      comment={ c }
+      allComments={ allComments }
+      authors={ authors }
+      onLikeSelectionChange={ onLikeSelectionChange } />,
+    );
 
   return (
     <div>
@@ -125,7 +131,8 @@ function Post({
               <StyledUsername>{ author?.name }</StyledUsername>
               <StyledDate>{ getCommentDate(comment.created) }</StyledDate>
             </div>
-            <Likes likesNumber={ comment.likes ?? 0 } />
+            <Likes likesNumber={ comment.likes ?? 0 }
+                   onLikeSelectionChange={ onLikeSelectionChange } />
           </StyledHeader>
           <StyledComment>{ comment.text }</StyledComment>
         </StyledContent>
