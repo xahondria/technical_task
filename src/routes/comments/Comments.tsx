@@ -155,7 +155,8 @@ function Comments() {
         <div>Error: { String(commentsCollection.error) }</div>
         <StyledLoadButtonContainer className="container">
           <StyledLoadButton type="button"
-                            onClick={ onLoadMoreClick }>Загрузить ещё</StyledLoadButton>
+                            disabled={ refetchInProgress }
+                            onClick={ onReloadClick }>Загрузить заново</StyledLoadButton>
         </StyledLoadButtonContainer>
       </StyledLayout>
     );
@@ -186,6 +187,14 @@ function Comments() {
                        authors={ authorsList?.data ?? [] }
                        onLikeSelectionChange={ onLikeSelectionChange } />;
   });
+
+  function onReloadClick(): void {
+    setRefetchInProgress(true);
+    currentPage = 0;
+    commentsCollection.refetch()
+      .finally(() => setRefetchInProgress(false))
+      .catch((error) => console.error('Error:', error));
+  }
 
   function onLoadMoreClick(): void {
     setRefetchInProgress(true);
